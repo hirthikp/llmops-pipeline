@@ -1,0 +1,38 @@
+
+services:
+  # LLMOps Control Plane
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg://user:password@db:5432/llmops
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    depends_on:
+      - db
+    networks:
+      - llmops_net
+
+  # Production Database
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=llmops
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - llmops_net
+
+networks:
+  llmops_net:
+    driver: bridge
+
+volumes:
+  postgres_data:

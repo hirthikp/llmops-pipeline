@@ -1,0 +1,5 @@
+{
+  "name": "LLMOps Pipeline Pro",
+  "description": "A production-grade LLMOps dashboard for prompt versioning, automated execution, and AI-driven evaluation using Gemini.",
+  "requestFramePermissions": []
+}
