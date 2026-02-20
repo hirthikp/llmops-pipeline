@@ -20,27 +20,23 @@ except ModuleNotFoundError as exc:
     from routers.prompt_router import router as prompt_router
     from schemas import HealthResponse
 
-logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO))
+
+logging.basicConfig(
+    level=getattr(logging, settings.log_level.upper(), logging.INFO)
+)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title=settings.app_name)
 
-# Enable CORS for frontend communication
+# ✅ Proper CORS Configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:8000",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:8000",
-        "http://16.171.242.83:3000",
-        "http://16.171.242.83:8000",
-        "*"  # Allow all for development
+        "http://localhost:3000",  # React dev server
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
 )
 
 
@@ -50,7 +46,9 @@ def on_startup() -> None:
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"error": "validation_error", "detail": exc.errors()},
@@ -58,11 +56,16 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 @app.exception_handler(Exception)
-async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+async def unhandled_exception_handler(
+    request: Request, exc: Exception
+) -> JSONResponse:
     logger.exception("Unhandled server error: %s", exc)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"error": "internal_server_error", "detail": "Unexpected server error."},
+        content={
+            "error": "internal_server_error",
+            "detail": "Unexpected server error.",
+        },
     )
 
 
@@ -72,4 +75,8 @@ app.include_router(execution_router, prefix=settings.api_prefix)
 
 @app.get("/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
-    return HealthResponse(status="ok", app=settings.app_name, environment=settings.environment)
+    return HealthResponse(
+        status="ok",
+        app=settings.app_name,
+        environment=settings.environment,
+    )
