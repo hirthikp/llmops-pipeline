@@ -1,4 +1,7 @@
 
+// Backend API Configuration
+export const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL || 'http://16.171.242.83:8000';
+
 export const EVALUATION_WEIGHTS = {
   ACCURACY: 0.5,
   CLARITY: 0.3,

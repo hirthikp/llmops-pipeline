@@ -1,9 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { db } from '../services/db';
-import { gemini } from '../services/gemini';
 import { Prompt, PromptVersion, Execution, Evaluation } from '../types';
-import { calculateOverallScore } from '../constants';
 import { Plus, ChevronRight, Save, Play, Loader2, History, FileText } from 'lucide-react';
 
 const PromptLibrary: React.FC = () => {
@@ -71,42 +69,18 @@ const PromptLibrary: React.FC = () => {
     setExecutionResult(null);
 
     try {
-      // 1. Execute the prompt
-      const { text, time } = await gemini.execute(selectedVersion.content);
-
-      // 2. Automated evaluation
-      const evalRes = await gemini.evaluate(selectedVersion.content, text);
-
-      // 3. Persist
-      const execId = crypto.randomUUID();
-      const overall = calculateOverallScore(evalRes.accuracy, evalRes.clarity, evalRes.hallucination_risk);
+      // Call backend to execute and evaluate
+      const { execution, evaluation } = await db.executeVersion(selectedVersion.id);
       
-      const evaluation: Evaluation = {
-        id: crypto.randomUUID(),
-        executionId: execId,
-        accuracy: evalRes.accuracy,
-        clarity: evalRes.clarity,
-        hallucinationRisk: evalRes.hallucination_risk,
-        overallScore: overall,
-        createdAt: Date.now()
-      };
+      // Populate missing fields from frontend state
+      execution.promptName = selectedPrompt.name;
+      execution.versionNumber = selectedVersion.versionNumber;
+      execution.evaluation = evaluation;
 
-      const execution: Execution = {
-        id: execId,
-        promptVersionId: selectedVersion.id,
-        promptName: selectedPrompt.name,
-        versionNumber: selectedVersion.versionNumber,
-        responseText: text,
-        responseTime: time,
-        createdAt: Date.now(),
-        evaluation
-      };
-
-      await db.saveExecution(execution, evaluation);
       setExecutionResult(execution);
     } catch (e) {
       console.error(e);
-      alert("Failed to execute prompt. Please check your Gemini API key.");
+      alert(`Failed to execute prompt: ${e instanceof Error ? e.message : 'Unknown error'}`);
     } finally {
       setIsRunning(false);
     }

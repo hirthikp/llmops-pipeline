@@ -30,6 +30,14 @@ class PromptVersionResponse(BaseModel):
     created_at: datetime
 
 
+class ListPromptsResponse(BaseModel):
+    prompts: list[PromptResponse]
+
+
+class ListPromptVersionsResponse(BaseModel):
+    versions: list[PromptVersionResponse]
+
+
 class EvaluationScores(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
